@@ -1,6 +1,6 @@
 # Jude Joyson's Portfolio
 
-A responsive, space-themed developer portfolio built with plain HTML, CSS, and
+A responsive, developer portfolio built with plain HTML, CSS, and
 JavaScript.
 
 ## Run locally
