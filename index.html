@@ -300,6 +300,11 @@
     .ipod-wheel .ctrl-btn:active {
       transform: scale(0.92);
     }
+    .ipod-wheel .ctrl-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.35;
+      transform: none;
+    }
     /* play button special */
     .ipod-wheel .play-btn {
       background: rgba(255, 255, 255, 0.3);
@@ -447,13 +452,13 @@
 
     <!-- PROJECT DISPLAY -->
     <div class="project-display" id="projectDisplay">
-      <div class="project-icon" id="projectIcon"><i class="fas fa-code"></i></div>
-      <div class="project-title" id="projectTitle">orbit</div>
-      <div class="project-desc" id="projectDesc">full-stack satellite tracker</div>
+      <div class="project-icon" id="projectIcon"><i class="fas fa-chart-line"></i></div>
+      <div class="project-title" id="projectTitle">TradingSimJAVA</div>
+      <div class="project-desc" id="projectDesc">deterministic, event-driven trading simulator built with Java 17</div>
       <div class="project-tech" id="projectTech">
-        <span class="tech-tag">React</span>
-        <span class="tech-tag">Node</span>
-        <span class="tech-tag">WebSockets</span>
+        <span class="tech-tag">Java 17</span>
+        <span class="tech-tag">Maven</span>
+        <span class="tech-tag">Trading</span>
       </div>
       <div class="progress-wrap">
         <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 20%;"></div></div>
@@ -508,39 +513,25 @@
     // ============================================================
     const projects = [
       {
-        title: "orbit",
-        desc: "real-time satellite tracking dashboard with live telemetry",
-        tech: ["React", "D3.js", "WebSocket"],
-        icon: "fa-satellite",
-        github: "https://github.com/yourusername/orbit"
+        title: "TradingSimJAVA",
+        desc: "deterministic, event-driven trading simulator with price-time order matching",
+        tech: ["Java 17", "Maven", "Trading"],
+        icon: "fa-chart-line",
+        github: "https://github.com/judejoyson/TradingSimJAVA"
       },
       {
-        title: "lunar landing",
-        desc: "3D lunar descent simulation with physics-based controls",
-        tech: ["Three.js", "Cannon.js", "Vite"],
-        icon: "fa-moon",
-        github: "https://github.com/yourusername/lunar-landing"
+        title: "AI Checkers",
+        desc: "a strategic checkers game featuring an intelligent computer opponent",
+        tech: ["Artificial Intelligence", "Game Logic", "Algorithms"],
+        icon: "fa-chess-board",
+        github: null
       },
       {
-        title: "stellar CLI",
-        desc: "astrophotography image stacking & processing tool",
-        tech: ["Python", "NumPy", "OpenCV"],
-        icon: "fa-terminal",
-        github: "https://github.com/yourusername/stellar-cli"
-      },
-      {
-        title: "deep space API",
-        desc: "RESTful service for ISS position & space weather data",
-        tech: ["Node.js", "Express", "MongoDB"],
-        icon: "fa-satellite-dish",
-        github: "https://github.com/yourusername/deep-space-api"
-      },
-      {
-        title: "neon waves",
-        desc: "interactive audio visualizer with Y2K aesthetics",
-        tech: ["Canvas", "Web Audio", "GSAP"],
-        icon: "fa-wave-square",
-        github: "https://github.com/yourusername/neon-waves"
+        title: "NewHorizon",
+        desc: "a website project exploring modern web design and development",
+        tech: ["Website", "Web Design"],
+        icon: "fa-globe",
+        github: "https://github.com/judejoyson/NewHorizon"
       }
     ];
 
@@ -574,6 +565,11 @@
       const percent = ((currentIndex + 1) / total) * 100;
       progressFill.style.width = `${percent}%`;
       projectCounter.textContent = `${currentIndex + 1} / ${total}`;
+      playBtn.disabled = !project.github;
+      playBtn.setAttribute(
+        'aria-label',
+        project.github ? `View ${project.title} on GitHub` : `${project.title} has no public GitHub link`
+      );
     }
 
     // ---------- event listeners ----------
@@ -584,7 +580,7 @@
     playBtn.addEventListener('click', () => {
       const project = projects[currentIndex];
       if (project.github) {
-        window.open(project.github, '_blank');
+        window.open(project.github, '_blank', 'noopener,noreferrer');
       } else {
         alert('No GitHub link for this project.');
       }
@@ -597,7 +593,7 @@
       else if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
         const project = projects[currentIndex];
-        if (project.github) window.open(project.github, '_blank');
+        if (project.github) window.open(project.github, '_blank', 'noopener,noreferrer');
       }
     });
 
