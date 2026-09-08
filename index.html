@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jude Joyson Portfolio</title>
+  <!-- Font Awesome (icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ============================================================
+       PLAN / ARCHITECTURE
+       ------------------------------------------------------------
+       1.  HTML structure:
+           - header with logo + tagline
+           - main player (iPod-style)
+             - display: project title, description, tech tags
+             - click wheel: reverse, play (github), forward (white circle)
+           - about + contact section (cards)
+           - footer
+       2.  CSS:
+           - Y2K aesthetic: bright gradients, glows, bubblegum colors,
+             metallic/glossy surfaces, chrome borders.
+           - Background: animated gradient + floating shapes
+           - iPod wheel: white circle with 3 buttons (rev, play, fwd)
+           - About/contact: glassmorphism cards
+       3.  JavaScript:
+           - projects array with github links
+           - currentProject index
+           - updateDisplay()
+           - event listeners for rev / fwd / play
+       ============================================================ */
+
+    /* ---------- RESET & BASE ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Trebuchet MS', 'Lucida Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5c8e8;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ---------- Y2K ANIMATED BACKGROUND ---------- */
+    .y2k-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: linear-gradient(135deg, #fce6b4, #ffb3d9, #b3e5ff, #c3f0b0);
+      background-size: 400% 400%;
+      animation: gradientMove 18s ease infinite;
+      pointer-events: none;
+    }
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .shape {
+      position: fixed;
+      border-radius: 50%;
+      opacity: 0.25;
+      pointer-events: none;
+      z-index: 0;
+      animation: floatShape 20s infinite alternate ease-in-out;
+    }
+    .shape1 {
+      width: 280px;
+      height: 280px;
+      background: #ff69b4;
+      top: -40px;
+      left: -60px;
+      animation-duration: 22s;
+      filter: blur(60px);
+    }
+    .shape2 {
+      width: 400px;
+      height: 400px;
+      background: #4ecdc4;
+      bottom: -100px;
+      right: -80px;
+      animation-duration: 26s;
+      filter: blur(70px);
+    }
+    .shape3 {
+      width: 200px;
+      height: 200px;
+      background: #ffe66d;
+      top: 40%;
+      right: 10%;
+      animation-duration: 18s;
+      filter: blur(50px);
+    }
+    .shape4 {
+      width: 150px;
+      height: 150px;
+      background: #a78bfa;
+      bottom: 20%;
+      left: 5%;
+      animation-duration: 24s;
+      filter: blur(45px);
+    }
+    @keyframes floatShape {
+      0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+      100% { transform: translate(40px, -30px) scale(1.2) rotate(15deg); }
+    }
+
+    /* ---------- MAIN CARD (iPod-style) ---------- */
+    .player-container {
+      position: relative;
+      z-index: 10;
+      max-width: 720px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 60px 60px 40px 40px;
+      padding: 2rem 2rem 1.5rem 2rem;
+      box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.2),
+        inset 0 0 0 2px rgba(255, 255, 255, 0.6),
+        inset 0 0 20px #ffb3e6;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    /* header */
+    .player-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+      margin-bottom: 1.8rem;
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff2e7d, #b83bff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+      text-shadow: 0 0 30px #ff6eb4;
+    }
+    .logo i {
+      -webkit-text-fill-color: initial;
+      color: #ff4d94;
+      margin-right: 6px;
+    }
+    .tagline {
+      font-size: 0.8rem;
+      background: #ffd966;
+      padding: 0.2rem 1rem;
+      border-radius: 30px;
+      color: #333;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      box-shadow: inset 0 -2px 0 #b38f40;
+      border: 1px solid #fff9e0;
+    }
+
+    /* PROJECT DISPLAY */
+    .project-display {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border-radius: 40px;
+      padding: 2rem 1.8rem;
+      margin: 0.5rem 0 1.8rem 0;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: inset 0 0 30px rgba(255, 200, 240, 0.3);
+      min-height: 190px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: 0.2s;
+    }
+    .project-icon {
+      font-size: 3.2rem;
+      color: #ff3b8a;
+      margin-bottom: 0.2rem;
+      filter: drop-shadow(0 0 10px #ff99cc);
+    }
+    .project-title {
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #1a1a2e;
+      text-shadow: 2px 2px 0 #ffe5f0;
+      margin-bottom: 0.2rem;
+    }
+    .project-desc {
+      font-size: 1rem;
+      color: #1e1e3a;
+      opacity: 0.9;
+      margin: 0.4rem 0 0.6rem;
+      font-weight: 500;
+    }
+    .project-tech {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.4rem;
+    }
+    .tech-tag {
+      background: rgba(0, 0, 0, 0.08);
+      padding: 0.2rem 1rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #1f1f3a;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(2px);
+      letter-spacing: 0.3px;
+    }
+
+    /* progress bar */
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin: 0.8rem 0 0.2rem;
+    }
+    .progress-bar {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+    .progress-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #ff7eb3, #b983ff);
+      border-radius: 20px;
+      transition: width 0.1s;
+    }
+    .counter {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #2d1b3d;
+      background: rgba(255, 255, 255, 0.4);
+      padding: 0.1rem 1rem;
+      border-radius: 30px;
+      border: 1px solid #fff;
+    }
+
+    /* ===== iPod WHITE CIRCLE CONTROLS ===== */
+    .ipod-wheel {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+      margin: 1.5rem auto 0.8rem;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(8px);
+      border-radius: 999px;
+      padding: 0.6rem 1.8rem;
+      width: fit-content;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08), inset 0 0 20px rgba(255, 255, 255, 0.6);
+      transition: 0.2s;
+    }
+    .ipod-wheel .ctrl-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      padding: 0.3rem 1.2rem;
+      cursor: pointer;
+      color: #1a1a3a;
+      font-weight: 600;
+      transition: 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-radius: 60px;
+    }
+    .ipod-wheel .ctrl-btn i {
+      font-size: 1.5rem;
+      color: #ff2e7d;
+      filter: drop-shadow(0 0 6px #ff99cc);
+    }
+    .ipod-wheel .ctrl-btn:hover {
+      background: rgba(255, 255, 255, 0.5);
+      transform: scale(1.05);
+    }
+    .ipod-wheel .ctrl-btn:active {
+      transform: scale(0.92);
+    }
+    .ipod-wheel .ctrl-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.35;
+      transform: none;
+    }
+    /* play button special */
+    .ipod-wheel .play-btn {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 60px;
+      padding: 0.3rem 1.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+    .ipod-wheel .play-btn i {
+      color: #b83bff;
+      filter: drop-shadow(0 0 8px #b983ff);
+    }
+
+    /* ===== ABOUT + CONTACT section ===== */
+    .info-section {
+      margin-top: 2.8rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      border-top: 2px solid rgba(255, 255, 255, 0.3);
+      padding-top: 2rem;
+    }
+    .info-card {
+      flex: 1 1 200px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 40px;
+      padding: 1.5rem 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: inset 0 0 30px rgba(255, 200, 240, 0.15);
+      transition: 0.2s;
+    }
+    .info-card:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .info-card i {
+      font-size: 2rem;
+      color: #ff3b8a;
+      margin-bottom: 0.4rem;
+      filter: drop-shadow(0 0 8px #ff99cc);
+    }
+    .info-card h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 0.3rem;
+    }
+    #about {
+      text-align: center;
+    }
+    #contact {
+      text-align: center;
+    }
+    #about ul {
+      display: inline-block;
+      text-align: left;
+    }
+    .about-location {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+    .about-location i {
+      margin-bottom: 0;
+      font-size: 0.85rem;
+    }
+    .info-card p {
+      color: #1e1e3a;
+      opacity: 0.85;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .info-card .btn {
+      display: inline-block;
+      margin-top: 0.8rem;
+      background: rgba(255, 255, 255, 0.3);
+      padding: 0.3rem 1.4rem;
+      border-radius: 40px;
+      color: #1a1a3a;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      transition: 0.15s;
+    }
+    .info-card .btn:hover {
+      background: rgba(255, 255, 255, 0.6);
+      transform: scale(1.02);
+    }
+    .social-links {
+      margin-top: 0.6rem;
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+    }
+    .social-links a {
+      color: #1f1f3a;
+      font-size: 1.6rem;
+      transition: 0.2s;
+      filter: drop-shadow(0 0 6px #ffb3d9);
+    }
+    .social-links a:hover {
+      transform: scale(1.2) rotate(-5deg);
+      color: #ff2e7d;
+    }
+
+    /* footer */
+    .player-footer {
+      margin-top: 1.8rem;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #1e1e3a;
+      opacity: 0.7;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      padding-top: 1rem;
+    }
+
+    /* responsive */
+    @media (max-width: 550px) {
+      .player-container { padding: 1.2rem; }
+      .project-title { font-size: 1.8rem; }
+      .ipod-wheel { padding: 0.4rem 0.8rem; flex-wrap: wrap; gap: 0.2rem; }
+      .ipod-wheel .ctrl-btn { padding: 0.2rem 0.8rem; font-size: 1.2rem; }
+      .logo { font-size: 1.4rem; }
+      .tagline { font-size: 0.6rem; padding: 0.1rem 0.8rem; }
+      .info-card { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Y2K BACKGROUND -->
+  <div class="y2k-bg"></div>
+  <div class="shape shape1"></div>
+  <div class="shape shape2"></div>
+  <div class="shape shape3"></div>
+  <div class="shape shape4"></div>
+
+  <!-- ===== MAIN PLAYER (iPod) ===== -->
+  <div class="player-container" id="playerContainer">
+    <!-- header -->
+    <div class="player-header">
+      <div class="logo"><i class="fas fa-compact-disc"></i> My Projects</div>
+      <span class="tagline"><i class="fas fa-star"></i>  Jude Joyson  <i class="fas fa-star"></i></span>
+    </div>
+
+    <!-- PROJECT DISPLAY -->
+    <div class="project-display" id="projectDisplay">
+      <div class="project-icon" id="projectIcon"><i class="fas fa-chart-line"></i></div>
+      <div class="project-title" id="projectTitle">TradingSimJAVA</div>
+      <div class="project-desc" id="projectDesc">deterministic, event-driven trading simulator built with Java 17</div>
+      <div class="project-tech" id="projectTech">
+        <span class="tech-tag">Java 17</span>
+        <span class="tech-tag">Maven</span>
+        <span class="tech-tag">Trading</span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 20%;"></div></div>
+        <span class="counter" id="projectCounter">1 / 5</span>
+      </div>
+    </div>
+
+    <!-- ===== iPod WHITE CIRCLE CONTROLS ===== -->
+    <div class="ipod-wheel">
+      <button class="ctrl-btn" id="prevBtn" aria-label="reverse"><i class="fas fa-backward"></i></button>
+      <button class="ctrl-btn play-btn" id="playBtn" aria-label="play (github)"><i class="fas fa-play"></i></button>
+      <button class="ctrl-btn" id="nextBtn" aria-label="forward"><i class="fas fa-forward"></i></button>
+    </div>
+
+    <!-- ===== ABOUT + CONTACT (before projects, at end of page) ===== -->
+    <div class="info-section" id="aboutContact">
+      <!-- about -->
+      <div class="info-card" id="about">
+        <i class="fas fa-user-astronaut"></i>
+        <h3>About me</h3>
+        <p>I am currently a senior studying computer science at the University of South Florida. I have a diverse background of experience and a drive to improve technology. I have a strong focus and interest of AI developments in the following concentrations: </p>
+        <ul style="margin-top:0.5rem; color:#1e1e3a; opacity:0.85; font-family:inherit; font-size:0.85rem; padding-left:1.2rem;">
+          <li>Software Engineering</li>
+          <li>Computer Vision</li>
+          <li>Machine Learning</li>
+        </ul>
+        <p class="about-location" style="margin-top:0.4rem; font-size:0.85rem;"><i class="fas fa-map-pin"></i> Tampa</p>
+      </div>
+      <!-- contact -->
+      <div class="info-card" id="contact">
+        <i class="fas fa-paper-plane"></i>
+        <h3>Contact me</h3>
+        <p> Please reach out if you have any collaborations or opportunities in mind.</p>
+        <a href="#" class="btn"><i class="fas fa-envelope"></i>  joysonjude2004@gmail.com</a>
+        <div class="social-links">
+          <a href="#"><i class="fab fa-github"></i></a>
+          <a href="#"><i class="fab fa-linkedin"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div class="player-footer">
+      <i class="fas fa-music"></i>  press play on your career  <i class="fas fa-music"></i>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    //  PROJECT DATA (each with github link)
+    // ============================================================
+    const projects = [
+      {
+        title: "TradingSimJAVA",
+        desc: "deterministic, event-driven trading simulator with price-time order matching",
+        tech: ["Java 17", "Maven", "Trading"],
+        icon: "fa-chart-line",
+        github: "https://github.com/judejoyson/TradingSimJAVA"
+      },
+      {
+        title: "AI Checkers",
+        desc: "interactive checkers with human, Minimax, Expectimax, and Reflex players",
+        tech: ["Python", "Tkinter", "Game AI"],
+        icon: "fa-chess-board",
+        github: "https://github.com/judejoyson/AI-checkers"
+      },
+      {
+        title: "CSV Stock Loader",
+        desc: "loads stock data from CSV files and renders candlestick charts with pattern recognition",
+        tech: ["C#", "CSV", "Pattern Recognition"],
+        icon: "fa-file-csv",
+        github: "https://github.com/judejoyson/Candlestick-chart-loader-with-patter-recognition"
+      },
+      {
+        title: "NewHorizon",
+        desc: "a website project exploring modern web design and development",
+        tech: ["Website", "Web Design"],
+        icon: "fa-globe",
+        github: "https://github.com/judejoyson/NewHorizon"
+      }
+    ];
+
+    // ---------- state ----------
+    let currentIndex = 0;
+    const total = projects.length;
+
+    // DOM refs
+    const projectIcon = document.getElementById('projectIcon');
+    const projectTitle = document.getElementById('projectTitle');
+    const projectDesc = document.getElementById('projectDesc');
+    const projectTech = document.getElementById('projectTech');
+    const progressFill = document.getElementById('progressFill');
+    const projectCounter = document.getElementById('projectCounter');
+
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const playBtn = document.getElementById('playBtn');
+
+    // ---------- update display ----------
+    function updateDisplay(index) {
+      if (index < 0) index = total - 1;
+      if (index >= total) index = 0;
+      currentIndex = index;
+
+      const project = projects[currentIndex];
+      projectIcon.innerHTML = `<i class="fas ${project.icon}"></i>`;
+      projectTitle.textContent = project.title;
+      projectDesc.textContent = project.desc;
+      projectTech.innerHTML = project.tech.map(t => `<span class="tech-tag">${t}</span>`).join('');
+      const percent = ((currentIndex + 1) / total) * 100;
+      progressFill.style.width = `${percent}%`;
+      projectCounter.textContent = `${currentIndex + 1} / ${total}`;
+      playBtn.disabled = !project.github;
+      playBtn.setAttribute(
+        'aria-label',
+        project.github ? `View ${project.title} on GitHub` : `${project.title} has no public GitHub link`
+      );
+    }
+
+    // ---------- event listeners ----------
+    prevBtn.addEventListener('click', () => updateDisplay(currentIndex - 1));
+    nextBtn.addEventListener('click', () => updateDisplay(currentIndex + 1));
+
+    // PLAY button: opens github link of current project
+    playBtn.addEventListener('click', () => {
+      const project = projects[currentIndex];
+      if (project.github) {
+        window.open(project.github, '_blank', 'noopener,noreferrer');
+      } else {
+        alert('No GitHub link for this project.');
+      }
+    });
+
+    // keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); updateDisplay(currentIndex - 1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); updateDisplay(currentIndex + 1); }
+      else if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        const project = projects[currentIndex];
+        if (project.github) window.open(project.github, '_blank', 'noopener,noreferrer');
+      }
+    });
+
+    // ---------- init ----------
+    updateDisplay(0);
+    console.log('✨ Use rev/fwd/play or arrow keys + space. ✨');
+  </script>
+
+  <!-- ============================================================
+       FINE‑TUNE GUIDE
+       ------------------------------------------------------------
+       - PROJECTS: edit the 'projects' array in <script>.
+         each: { title, desc, tech: [], icon: 'fa-...', github: 'url' }
+       - ABOUT / CONTACT: edit text inside .info-card.
+       - SOCIAL LINKS: replace # in <a href="#"> with your URLs.
+       - COLORS: search for #ff2e7d, #b83bff, #4ecdc4, #ffe66d etc.
+       - SHAPES: adjust .shape1, .shape2 sizes/colors/positions.
+       - PROGRESS BAR: fill based on current index.
+       - KEYBOARD: left/right arrows + space/enter for play.
+       ============================================================ -->
+</body>
+</html>
