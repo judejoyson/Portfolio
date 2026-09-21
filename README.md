@@ -1,16 +1,10 @@
 # Jude Joyson's Portfolio
 
-A responsive, developer portfolio built with plain HTML, CSS, and
-JavaScript.
+My portfolio website was built to showcase my projects, skills, and experience. It is designed to be clean, fast, and fully responsive across all devices.
 
-## Run locally
 
-Open `index.html` directly in a browser, or serve the folder with any static
-file server:
+## 🌐 Live Demo
 
-```powershell
-npx serve .
-```
 
 ## Customize
 
